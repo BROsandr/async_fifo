@@ -4,6 +4,7 @@ timeprecision 1ps;
 module tb;
 
   parameter DATA_WIDTH = 8;
+  parameter ADDR_WIDTH = 6;
 
   wire [DATA_WIDTH-1:0] data_out;
   wire                  full;
@@ -12,12 +13,51 @@ module tb;
   reg                   w_en, wclk, wrst_n;
   reg                   r_en, rclk, rrst_n;
 
+// START declaration of behavioral model
+  wire [DATA_WIDTH-1:0] beh_data_out;
+  wire                  beh_full;
+  wire                  beh_empty;
+  reg [DATA_WIDTH-1:0]  beh_data_in;
+  reg                   beh_w_en;
+  reg                   beh_r_en;
+
+  beh_async_fifo #(
+    .DSIZE (DATA_WIDTH),
+    .ASIZE (ADDR_WIDTH)
+  ) beh_async_fifo (
+    .rclk,
+    .wclk,
+    .rrst_n,
+    .wrst_n,
+    .rdata (beh_data_out),
+    .wdata (beh_data_in),
+    .winc (beh_w_en),
+    .rinc (beh_r_en),
+    .wfull (beh_full),
+    .rempty (beh_empty)
+  );
+// END declaration of behavioral model
+
+  sva_async_full_fifo : assert property (
+    @(posedge wclk) disable iff (!wrst_n)
+    beh_full == full
+  ) else begin
+    $error("beh_full != full");
+  end
+
+  sva_async_empty_fifo : assert property (
+    @(posedge rclk) disable iff (!rrst_n)
+    beh_empty == empty
+  ) else begin
+    $error("beh_empty != empty");
+  end
+
   // Queue to push data_in
-  reg [DATA_WIDTH-1:0] wdata_q[$], wdata;
+  reg [DATA_WIDTH-1:0] wdata;
 
   async_fifo #(
     .DSIZE (DATA_WIDTH),
-    .ASIZE (6)
+    .ASIZE (ADDR_WIDTH)
   ) async_fifo (
     .wclk,
     .wrst_n,
@@ -38,17 +78,21 @@ module tb;
     wclk = 1'b0; wrst_n = 1'b0;
     w_en = 1'b0;
     data_in = 0;
-    
+
+    beh_w_en    = 1'b0;
+    beh_data_in = 0;
+
     repeat(10) @(posedge wclk);
     wrst_n = 1'b1;
 
     repeat(2) begin
       for (int i=0; i<30; i++) begin
-        @(posedge wclk iff !full);
-        w_en = (i%2 == 0)? 1'b1 : 1'b0;
-        if (w_en) begin
-          data_in = $urandom;
-          wdata_q.push_back(data_in);
+        @(posedge wclk iff !beh_full);
+        beh_w_en = (i%2 == 0)? 1'b1 : 1'b0;
+        w_en = beh_w_en;
+        if (beh_w_en) begin
+          beh_data_in = $urandom;
+          data_in = beh_data_in;
         end
       end
       #50;
@@ -58,16 +102,18 @@ module tb;
   initial begin
     rclk = 1'b0; rrst_n = 1'b0;
     r_en = 1'b0;
+    beh_r_en = 1'b0;
 
     repeat(20) @(posedge rclk);
     rrst_n = 1'b1;
 
     repeat(2) begin
       for (int i=0; i<30; i++) begin
-        @(posedge rclk iff !empty);
-        r_en = (i%2 == 0)? 1'b1 : 1'b0;
-        if (r_en) begin
-          wdata = wdata_q.pop_front();
+        @(posedge rclk iff !beh_empty);
+        beh_r_en = (i%2 == 0)? 1'b1 : 1'b0;
+        r_en = beh_r_en;
+        if (beh_r_en) begin
+          wdata = beh_data_out;
           if(data_out !== wdata) $error("Time = %0t: Comparison Failed: expected wr_data = %h, rd_data = %h", $time, wdata, data_out);
           else $display("Time = %0t: Comparison Passed: wr_data = %h and rd_data = %h",$time, wdata, data_out);
         end
