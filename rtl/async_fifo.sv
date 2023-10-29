@@ -17,14 +17,18 @@ module async_fifo #(
   wire [ASIZE-1:0] waddr, raddr;
   wire [ASIZE:0]   wptr, rptr, wq2_rptr, rq2_wptr;
 
-  sync_r2w sync_r2w (
+  sync_r2w #(
+    .ADDRSIZE (ASIZE)
+  ) sync_r2w (
     .wclk     (wclk),
     .wrst_n   (wrst_n),
     .wq2_rptr (wq2_rptr),
     .rptr     (rptr)
   );
 
-  sync_w2r sync_w2r (
+  sync_w2r #(
+    .ADDRSIZE (ASIZE)
+  ) sync_w2r (
     .rclk     (rclk),
     .rrst_n   (rrst_n),
     .rq2_wptr (rq2_wptr),
