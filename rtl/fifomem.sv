@@ -6,7 +6,7 @@ module fifomem #(
   input                 wclken,
   input  [DATASIZE-1:0] wdata,
   input  [ADDRSIZE-1:0] waddr,
-  input                 raddr,
+  input  [ADDRSIZE-1:0] raddr,
   input                 wfull,
   output [DATASIZE-1:0] rdata
 );
