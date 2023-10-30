@@ -57,8 +57,8 @@ module tb;
   logic                tmp_w_en, tmp_r_en;
 
   async_fifo #(
-    .DSIZE (DATA_WIDTH),
-    .ASIZE (ADDR_WIDTH)
+    .data_t (logic [DATA_WIDTH-1:0]),
+    .DEPTH  (32)
   ) async_fifo (
     .wclk,
     .wrst_n,

@@ -1,14 +1,14 @@
 module fifomem #(
-  parameter DATASIZE = 8, // Memory data word width
-  parameter ADDRSIZE = 4  // Number of mem address bits
+  parameter type         data_t     = logic [7:0], // Memory data word width
+  parameter int unsigned ADDR_WIDTH = 8            // Number of mem address bits
 ) (
-  input                 wclk,
-  input                 wclken,
-  input  [DATASIZE-1:0] wdata,
-  input  [ADDRSIZE-1:0] waddr,
-  input  [ADDRSIZE-1:0] raddr,
-  input                 wfull,
-  output [DATASIZE-1:0] rdata
+  input                   wclk,
+  input                   wclken,
+  input  data_t           wdata,
+  input  [ADDR_WIDTH-1:0] waddr,
+  input  [ADDR_WIDTH-1:0] raddr,
+  input                   wfull,
+  output data_t           rdata
 );
 
 `ifdef VENDORRAM
@@ -24,8 +24,9 @@ module fifomem #(
   );
 `else
   // RTL Verilog memory model
-  localparam DEPTH = 1<<ADDRSIZE;
-  reg [DATASIZE-1:0] mem [0:DEPTH-1];
+  localparam int unsigned DEPTH = 1 << ADDR_WIDTH;
+  typedef data_t          mem_t [0:DEPTH-1];
+  mem_t                   mem;
 
   assign rdata = mem[raddr];
 
