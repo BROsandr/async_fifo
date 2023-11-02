@@ -60,16 +60,16 @@ module tb;
     .data_t (logic [DATA_WIDTH-1:0]),
     .DEPTH  (32)
   ) async_fifo (
-    .wclk,
-    .wrst_n,
-    .rclk,
-    .rrst_n,
-    .winc (w_en),
-    .rinc (r_en),
-    .wdata (data_in),
-    .rdata (data_out),
-    .wfull (full),
-    .rempty (empty)
+    .clk_w_i   (wclk),
+    .rst_w_ni  (wrst_n),
+    .clk_r_i   (rclk),
+    .rst_r_ni  (rrst_n),
+    .w_en_i    (w_en),
+    .r_en_i    (r_en),
+    .w_data_i  (data_in),
+    .r_data_o  (data_out),
+    .w_full_o  (full),
+    .r_empty_o (empty)
   );
 
   always #10ns wclk = ~wclk;
