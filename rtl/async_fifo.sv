@@ -14,7 +14,7 @@ module async_fifo #(
   output        r_empty_o
 );
 
-  localparam int unsigned        ADDR_WIDTH = $clog2(DEPTH);
+  localparam int unsigned        ADDR_WIDTH = (DEPTH > 4) ? $clog2(DEPTH) : 3;
   typedef logic [ADDR_WIDTH-1:0] addr_t;
   typedef logic [ADDR_WIDTH  :0] gray_t;
 
